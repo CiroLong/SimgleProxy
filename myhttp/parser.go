@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net"
 	"strings"
@@ -15,13 +16,13 @@ func ParseHttpRequest(conn net.Conn) (Request, error) {
 	request := newRequest()
 	var inhead bool = true
 	var iter int = 1 //计数器
-	for {
+	for {            //头部
 		data, _, err := reader.ReadLine()
 		if err != nil {
 			if err != io.EOF {
 				log.Println(err)
 			} else {
-				break
+				return request, err
 			}
 		}
 		data_s := string(data)
@@ -54,8 +55,15 @@ func ParseHttpRequest(conn net.Conn) (Request, error) {
 
 		} else {
 			fmt.Println("Headers ends")
+			break
 		}
 	}
+	var err error
+	request.Body, err = ioutil.ReadAll(reader)
+	if err != nil {
+		return request, err
+	}
+	fmt.Printf("%#v\n", string(request.Body))
 
 	// fmt.Printf("%v", data)
 	fmt.Println("end")

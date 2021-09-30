@@ -41,6 +41,6 @@ func handler(conn net.Conn) {
 		fmt.Println(err)
 		return
 	}
-	fmt.Printf("%#v\n", request)
+	fmt.Printf("%#v\n", request.Headers)
 
 }

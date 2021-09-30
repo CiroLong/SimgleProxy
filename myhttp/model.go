@@ -7,6 +7,8 @@ type Request struct {
 	Proto  string // "HTTP/1.0"
 
 	Headers headers
+
+	Body []byte
 }
 
 const bufMaxSize = 1024 * 8
@@ -14,5 +16,6 @@ const bufMaxSize = 1024 * 8
 func newRequest() Request {
 	r := new(Request)
 	r.Headers = make(headers)
+	r.Body = make([]byte, bufMaxSize)
 	return *r
 }
