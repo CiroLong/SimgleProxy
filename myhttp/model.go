@@ -11,6 +11,21 @@ type Request struct {
 	Body []byte
 }
 
+type Url struct {
+	Router string
+	Query  map[string][]string // key=value1, key = value2
+}
+
+type Responce struct {
+	Proto      string
+	StatusCode int
+	Phrase     string
+
+	Headers headers
+
+	Body []byte
+}
+
 const bufMaxSize = 1024 * 8
 
 func newRequest() Request {
@@ -18,4 +33,11 @@ func newRequest() Request {
 	r.Headers = make(headers)
 	r.Body = make([]byte, bufMaxSize)
 	return *r
+}
+
+func newResponce() Responce {
+	Res := new(Responce)
+	Res.Headers = make(headers)
+	Res.Body = make([]byte, bufMaxSize)
+	return *Res
 }

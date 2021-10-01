@@ -3,16 +3,13 @@ package myhttp
 import (
 	"bufio"
 	"errors"
-	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
-	"net"
 	"strings"
 )
 
-func ParseHttpRequest(conn net.Conn) (Request, error) {
-	reader := bufio.NewReader(conn)
+//好像没有bug了, body正确, url正确
+func ParseHttpRequest(reader *bufio.Reader) (Request, error) {
 	request := newRequest()
 	var inhead bool = true
 	var iter int = 1 //计数器
@@ -31,7 +28,6 @@ func ParseHttpRequest(conn net.Conn) (Request, error) {
 			if len(RLine) != 3 {
 				return request, errors.New("not http")
 			}
-			fmt.Println("len = ", len(RLine))
 
 			request.Method = RLine[0]
 			request.Url = RLine[1]
@@ -54,19 +50,19 @@ func ParseHttpRequest(conn net.Conn) (Request, error) {
 			request.Headers[HeaderDomain] = append(request.Headers[HeaderDomain], HeadValue...)
 
 		} else {
-			fmt.Println("Headers ends")
+			// fmt.Println("Headers ends")
 			break
 		}
 	}
 	var err error
-	request.Body, err = ioutil.ReadAll(reader)
+	_, err = reader.Read(request.Body)
 	if err != nil {
 		return request, err
 	}
-	fmt.Printf("%#v\n", string(request.Body))
-
-	// fmt.Printf("%v", data)
-	fmt.Println("end")
 
 	return request, nil
+}
+
+func ParseUrl(url string) {
+
 }

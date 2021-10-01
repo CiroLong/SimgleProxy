@@ -2,8 +2,10 @@ package main
 
 import (
 	"SIMGLEPROXY/myhttp"
+	"bufio"
 	"fmt"
 	"net"
+	"os"
 )
 
 func init() {
@@ -36,11 +38,15 @@ func start() {
 func handler(conn net.Conn) {
 	defer conn.Close()
 
-	request, err := myhttp.ParseHttpRequest(conn)
+	reader := bufio.NewReader(conn)
+	request, err := myhttp.ParseHttpRequest(reader)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	fmt.Printf("%#v\n", request.Headers)
+
+	myhttp.SendHttpRequest(os.Stdout, request)
+
+	select {}
 
 }
