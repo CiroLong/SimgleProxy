@@ -32,6 +32,10 @@ func ParseHttpRequest(reader *bufio.Reader) (Request, error) {
 			request.Method = RLine[0]
 			request.Url = RLine[1]
 			request.Proto = RLine[2]
+			request.UrlParsed, err = ParseUrl(request.Url)
+			if err != nil {
+				return request, err
+			}
 			iter++
 			continue
 		}
@@ -63,6 +67,23 @@ func ParseHttpRequest(reader *bufio.Reader) (Request, error) {
 	return request, nil
 }
 
-func ParseUrl(url string) {
+func ParseUrl(url string) (Url, error) {
+	U := new(Url)
+	Sli := strings.Split(url, "?")
+	U.Router = Sli[0]
+	if len(Sli) == 1 {
+		return *U, nil
+	}
+	querys := strings.Split(Sli[1], "&")
+	for _, one := range querys {
+		kv := strings.Split(one, "=")
+		if len(kv) != 2 {
+			return *U, errors.New("query error")
+		}
+		k := kv[0]
+		v := kv[1]
+		U.Query[k] = append(U.Query[k], v)
+	}
 
+	return *U, nil
 }

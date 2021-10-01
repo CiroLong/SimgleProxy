@@ -2,9 +2,10 @@ package myhttp
 
 type headers map[string][]string
 type Request struct {
-	Method string // "GET"
-	Url    string // 自己解析,还是不用*url.URL了
-	Proto  string // "HTTP/1.0"
+	Method    string // "GET"
+	Url       string // 自己解析,还是不用*url.URL了
+	UrlParsed Url
+	Proto     string // "HTTP/1.0"
 
 	Headers headers
 
@@ -27,17 +28,3 @@ type Responce struct {
 }
 
 const bufMaxSize = 1024 * 8
-
-func newRequest() Request {
-	r := new(Request)
-	r.Headers = make(headers)
-	r.Body = make([]byte, bufMaxSize)
-	return *r
-}
-
-func newResponce() Responce {
-	Res := new(Responce)
-	Res.Headers = make(headers)
-	Res.Body = make([]byte, bufMaxSize)
-	return *Res
-}

@@ -38,6 +38,9 @@ func start() {
 func handler(conn net.Conn) {
 	defer conn.Close()
 
+	// 暂定为直接转发给 127.0.0.1:8081
+	// Host 为test.com
+
 	reader := bufio.NewReader(conn)
 	request, err := myhttp.ParseHttpRequest(reader)
 	if err != nil {
