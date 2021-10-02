@@ -1,7 +1,7 @@
 package myhttp
 
-func newResponce() Responce {
-	Res := new(Responce)
+func newResponse() Response {
+	Res := new(Response)
 	Res.Headers = make(headers)
 	Res.Body = make([]byte, bufMaxSize)
 	return *Res

@@ -17,7 +17,7 @@ type Url struct {
 	Query  map[string][]string // key=value1, key = value2
 }
 
-type Responce struct {
+type Response struct {
 	Proto      string
 	StatusCode int
 	Phrase     string

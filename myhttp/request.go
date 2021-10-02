@@ -14,14 +14,15 @@ func (r *Request) Copy() Request {
 	copy.Proto = r.Proto
 	copy.Body = r.Body[:]
 	for k, v := range r.Headers {
-		copy.Headers[k] = append(copy.Headers[k], v...)
+		newv := v[:]
+		copy.Headers[k] = append(copy.Headers[k], newv...)
 	}
 
 	return copy
 }
 
-func (r *Request) ChangeHost(newHost string) error {
+func (r *Request) ChangeHost(newHost ...string) error {
 	delete(r.Headers, "Host")
-	r.Headers["Host"] = []string{newHost}
+	r.Headers["Host"] = newHost[:] //?
 	return nil
 }

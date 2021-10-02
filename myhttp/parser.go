@@ -5,10 +5,13 @@ import (
 	"errors"
 	"io"
 	"log"
+	"strconv"
 	"strings"
 )
 
 //好像没有bug了, body正确, url正确
+//好吧要根据Content-Length 读取指定字节的数据
+//难过了
 func ParseHttpRequest(reader *bufio.Reader) (Request, error) {
 	request := newRequest()
 	var inhead bool = true
@@ -58,11 +61,20 @@ func ParseHttpRequest(reader *bufio.Reader) (Request, error) {
 			break
 		}
 	}
+
+	Length, ok := request.Headers["Content-Length"]
+	if !ok {
+		return request, nil
+	}
+	length, _ := strconv.Atoi(Length[0])
+
 	var err error
-	_, err = reader.Read(request.Body)
-	if err != nil {
+	body := make([]byte, length)
+	_, err = reader.Read(body)
+	if err != nil && err != io.EOF {
 		return request, err
 	}
+	request.Body = body[:]
 
 	return request, nil
 }

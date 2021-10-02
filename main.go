@@ -3,9 +3,11 @@ package main
 import (
 	"SIMGLEPROXY/myhttp"
 	"bufio"
+	"bytes"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"net"
-	"os"
 )
 
 func init() {
@@ -44,11 +46,74 @@ func handler(conn net.Conn) {
 	reader := bufio.NewReader(conn)
 	request, err := myhttp.ParseHttpRequest(reader)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("Parse error:", err)
 		return
 	}
+	fmt.Println("parse success")
+	// fmt.Printf("%#v\n", request.Headers)
 
-	myhttp.SendHttpRequest(os.Stdout, request)
+	//编辑请求
+	newRequest := request.Copy()
+	//newRequest.ChangeHost("127.0.0.1:8081")
+	//？
+
+	fmt.Println("copy success")
+	// fmt.Printf("%#v\n", newRequest.Headers)
+
+	proxy, err := net.Dial("tcp", "127.0.0.1:8081")
+	if err != nil {
+		fmt.Println("proxy connect error:", err)
+		//返回 错误代码
+		return
+	}
+	defer proxy.Close()
+
+	fmt.Println("dial success")
+
+	// _, err = io.Copy(conn, proxy) //好像这样就可以了
+	// if err != nil {
+	// 	fmt.Println("io copy error:", err)
+	// 	return
+	// }
+
+	go func() {
+		//应该在另一个goroutine中读取
+		_, err := io.Copy(conn, proxy)
+		if err != nil {
+			fmt.Println("io copy err", err)
+		}
+	}()
+	//myhttp.SendHttpRequest(os.Stdout, newRequest)
+	//var responseData []byte = make([]byte, 1024*8)
+	bufffff := new(bytes.Buffer)
+
+	err = myhttp.SendHttpRequest(bufffff, newRequest)
+	if err != nil {
+		fmt.Println("send http Request error:", err)
+		return
+	}
+	box, _ := ioutil.ReadAll(bufffff)
+	proxy.Write(box)
+
+	// fmt.Println("send success")
+
+	//这一段要重构
+	// responseReader := bufio.NewReader(proxy)
+
+	// _, err = proxy.Read(responseData)
+	// if err != nil && err != io.EOF {
+	// 	fmt.Println("get response error", err)
+	// 	fmt.Println(string(responseData))
+	// 	return
+	// }
+
+	// _, err = conn.Write(responseData)
+	// if err != nil {
+	// 	fmt.Println("wirte back error", err)
+	// 	return
+	// }
+
+	fmt.Println("done")
 
 	select {}
 
