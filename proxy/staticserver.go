@@ -32,11 +32,11 @@ func (s *StaticServer) Serve(conn net.Conn, request *myhttp.Request) error {
 	path := request.UrlParsed.Router[:]
 	path = strings.Replace(path, s.RemotePath, "", 1)
 
-	// fp, err := s.GetFile(path)
-	// if err != nil {
-	// 	return err
-	// }
-	// defer fp.Close()
+	fp, err := s.GetFile(path)
+	if err != nil {
+		return err
+	}
+	defer fp.Close()
 
 	resp := myhttp.NewResponse()
 	// resp.NotFound()
@@ -45,7 +45,7 @@ func (s *StaticServer) Serve(conn net.Conn, request *myhttp.Request) error {
 	// if err != nil {
 	// 	return err
 	// }
-	body, err := ioutil.ReadFile(path)
+	body, err := ioutil.ReadAll(fp)
 	if err != nil {
 		return err
 	}
