@@ -78,7 +78,7 @@ func handler(conn net.Conn) {
 
 	go func() {
 		//应该在另一个goroutine中读取
-		_, err := io.Copy(conn, proxy)
+		_, err := io.Copy(conn, proxy) //这个函数一直阻塞？
 		if err != nil {
 			fmt.Println("io copy err", err)
 		}
