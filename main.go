@@ -2,6 +2,7 @@ package main
 
 import (
 	"SIMGLEPROXY/myhttp"
+	"SIMGLEPROXY/proxy"
 	"bufio"
 	"bytes"
 	"fmt"
@@ -11,7 +12,7 @@ import (
 )
 
 func init() {
-
+	proxy.Init()
 }
 
 func main() {
@@ -33,7 +34,30 @@ func start() {
 			fmt.Println("accept error:", err)
 			break
 		}
-		go handler(conn)
+		go staticTest(conn)
+	}
+}
+
+func staticTest(conn net.Conn) {
+	defer conn.Close()
+
+	reader := bufio.NewReader(conn)
+	request, err := myhttp.ParseHttpRequest(reader)
+	if err != nil {
+		fmt.Println("Parse error:", err)
+		return
+	}
+	fmt.Println("parse success")
+	// fmt.Printf("%#v\n", request.Headers)
+
+	s, _ := proxy.FindServer(request.UrlParsed.Router) //传router好点
+
+	if s != nil {
+		if err := s.Serve(conn, &request); err != nil {
+			fmt.Println("Serve err", err)
+		}
+	} else {
+		fmt.Println("s is nil !")
 	}
 }
 
