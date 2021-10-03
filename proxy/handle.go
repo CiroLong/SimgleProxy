@@ -8,6 +8,14 @@ func Init() {
 
 	//这里应该用config读取配置文件
 
+	TargetRegistered["/api/v1"] = NewTargetServer(TargetServer{
+		ProxySetHeader: (map[string][]string{
+			"Host": {"test.com"},
+		}),
+		ProxyPass:      "127.0.0.1:8081",
+		LocationRouter: "/api/v1",
+	})
+
 	StaticRegistered["/static"] = NewStaticServer(StaticServer{
 		RemotePath:      "/static",
 		LocalRoot:       "/home/ciro/mydocument/localhost",

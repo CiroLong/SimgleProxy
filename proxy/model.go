@@ -11,7 +11,7 @@ type Server interface {
 
 type TargetServer struct {
 	ProxySetHeader map[string][]string //Host $test.com
-	ProxyPass      string              //http://127.0.0.1:7000
+	ProxyPass      string              //    http://127.0.0.1:7000
 	LocationRouter string              //   `/api/v1`
 }
 
