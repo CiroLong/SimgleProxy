@@ -1,12 +1,18 @@
 package main
 
-import "net/http"
+//还是用框架搭服务简单
+
+import "github.com/gin-gonic/gin"
 
 func main() {
+	r := gin.Default()
 
-	http.HandleFunc("/test", func(rw http.ResponseWriter, r *http.Request) {
-		rw.Write([]byte("hello simgle proxy v1!"))
+	r.GET("/test", func(c *gin.Context) {
+		c.String(200, "test ok")
+	})
+	r.GET("/api/v1", func(c *gin.Context) {
+		c.String(200, "api v1 ok")
 	})
 
-	http.ListenAndServe(":8081", nil)
+	r.Run(":8081")
 }

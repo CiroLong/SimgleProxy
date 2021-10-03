@@ -42,3 +42,8 @@ date :  10/3
 written at 10/3 11:56
 
 迁移到linux上
+
+written at 10/3 21:37
+ + 大概抽象出了proxy这个包（也许应该叫proxyserver？），测试了普通代理和静态代理的功能
+ + 准备加入配置文件
+ + testserver换用框架
