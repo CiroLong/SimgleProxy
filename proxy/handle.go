@@ -2,12 +2,14 @@ package proxy
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 )
 
 func Init() {
 	TargetRegistered = make(map[string]*TargetServer)
 	StaticRegistered = make(map[string]*StaticServer)
+	ProxyServerRegistered = make(map[string]ProxyServer)
 
 	//这里应该用config读取配置文件
 	c, err := LoadConfig()
@@ -15,7 +17,55 @@ func Init() {
 		fmt.Println("LoadConfig err:", err)
 		return
 	}
-	fmt.Printf("%#v\n", c)
+	fmt.Printf("%#v\n\n", c)
+
+	for _, server := range c.Servers {
+		p := new(ProxyServer)
+		p.ServerName = server.ServerName
+		p.AccessLogPath = server.AccessLogPath
+		p.ErrorLogPath = server.ErrorLogPath
+		p.ListenPort = strconv.Itoa(server.Listen)
+		for _, location := range server.Locations {
+			if location.IsStatic {
+				ss := NewStaticServer(StaticServer{
+					RemotePath:      location.Router,
+					LocalRoot:       location.Root,
+					DefaultFilePath: location.Index,
+				})
+				p.Locations = append(p.Locations, ss)
+			} else {
+				ts := NewTargetServer(TargetServer{
+					ProxyPass:      location.ProxyPass,
+					LocationRouter: location.Router,
+				})
+				//难过
+				ts.ProxySetHeader = make(map[string][]string)
+				x := strings.Split(location.ProxySetHeader, "&")
+				for _, xx := range x {
+					y := strings.Split(xx, "=")
+					if len(y) != 2 {
+						fmt.Println("config ProxySetHeader error")
+						return
+					}
+					ts.ProxySetHeader[y[0]] = append(ts.ProxySetHeader[y[0]], y[1])
+				}
+				p.Locations = append(p.Locations, ts)
+			}
+		}
+
+		ProxyServerRegistered[p.ServerName] = *p
+	}
+
+	fmt.Printf("%#v\n\n", ProxyServerRegistered)
+
+	//test
+	for _, s := range ProxyServerRegistered {
+		for _, server := range s.Locations {
+			fmt.Printf("%#v\n", server)
+		}
+	}
+
+	//test ok, right
 
 	// TargetRegistered["/api/v1"] = NewTargetServer(TargetServer{
 	// 	ProxySetHeader: (map[string][]string{
@@ -30,7 +80,6 @@ func Init() {
 	// 	LocalRoot:       "/home/ciro/mydocument/localhost",
 	// 	DefaultFilePath: "/home/ciro/mydocument/localhost/index.html",
 	// })
-	//?
 }
 
 func FindServer(url string) (server Server, isStatic bool) {

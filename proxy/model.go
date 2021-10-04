@@ -22,4 +22,17 @@ type StaticServer struct {
 }
 
 var TargetRegistered map[string]*TargetServer //利用LocationRouter作为键
+//好像该用server_name - > 29
+
 var StaticRegistered map[string]*StaticServer //利用RemotePath做为键
+
+//换个方案
+type ProxyServer struct {
+	ServerName    string
+	Locations     []Server
+	ErrorLogPath  string
+	AccessLogPath string
+	ListenPort    string
+}
+
+var ProxyServerRegistered map[string]ProxyServer //用server_name标识？
