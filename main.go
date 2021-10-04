@@ -17,7 +17,6 @@ func init() {
 
 func main() {
 
-	start()
 }
 
 func start() {

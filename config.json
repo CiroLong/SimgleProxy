@@ -1,0 +1,44 @@
+{
+    "servers": [
+        {
+            "listen": 80,
+            "server_name": "localhost1",
+            "locations": [
+                {
+                    "router": "^~ /api/v1",
+                    "proxy_set_header": "Host=$host",
+                    "proxy_pass": "http://127.0.0.1:8081",
+                    "isstatic": false
+                },
+                {
+                    "router": "^~ /static/",
+                    "root": "/mnt/var/www/localhost1",
+                    "index": "index.html",
+                    "isstatic": true
+                }
+            ],
+            "error_log": "/mnt/log/nginx/localhost1/error.log",
+            "access_log": "/mnt/log/nginx/localhost1/access.log"
+        },
+        {
+            "listen": 80,
+            "server_name": "localhost2",
+            "locations": [
+                {
+                    "router": "^~ /api/v1",
+                    "proxy_set_header": "Host=$host",
+                    "proxy_pass": "http://127.0.0.1:8082",
+                    "isstatic": false
+                },
+                {
+                    "router": "^~ /static/",
+                    "root": "/mnt/var/www/localhost2",
+                    "index": "index.html",
+                    "isstatic": true
+                }
+            ],
+            "error_log": "/mnt/log/nginx/localhost2/error.log",
+            "access_log": "/mnt/log/nginx/localhost2/access.log"
+        }
+    ]
+}
