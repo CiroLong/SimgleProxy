@@ -1,6 +1,8 @@
 package proxy
 
 import (
+	"SIMGLEPROXY/myhttp"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -56,14 +58,14 @@ func Init() {
 		ProxyServerRegistered[p.ServerName] = *p
 	}
 
-	fmt.Printf("%#v\n\n", ProxyServerRegistered)
+	// fmt.Printf("%#v\n\n", ProxyServerRegistered)
 
 	//test
-	for _, s := range ProxyServerRegistered {
-		for _, server := range s.Locations {
-			fmt.Printf("%#v\n", server)
-		}
-	}
+	// for _, s := range ProxyServerRegistered {
+	// 	for _, server := range s.Locations {
+	// 		fmt.Printf("%#v\n", server)
+	// 	}
+	// }
 
 	//test ok, right
 
@@ -82,6 +84,39 @@ func Init() {
 	// })
 }
 
+//由于更改了全局对象存放方式,FindServer函数要大改
+//要不传入request指针, 在函数内部确定对象好了
+func FindServer2(req *myhttp.Request) (server Server, isStatic bool, err error) {
+
+	//首先应该根据 Host 头部确定对应 server_name?
+	//应该叫server_name
+	hosts, ok := req.Headers["Host"]
+	if !ok {
+		return NewTargetServer(""), false, errors.New("No Host Header")
+	}
+	host := hosts[0] //简化
+
+	ps, ok := ProxyServerRegistered[host]
+	if !ok {
+		return NewTargetServer(""), false, errors.New("No such proxy server")
+	}
+
+	//
+	// 这里可能要对日志做处理
+	//
+
+	//然后根据 router 确定对应的location  (之后考虑通配符)
+	//回头写个函数
+	for _, server := range ps.Locations { //woc完蛋，匹配不了， proxyServer要改
+		//if req.UrlParsed.Router ==
+	}
+
+	//得到Server实例,返回
+
+	return NewTargetServer(""), false, nil
+}
+
+//原来的没用了，先放这
 func FindServer(url string) (server Server, isStatic bool) {
 	for key, val := range StaticRegistered {
 		if strings.HasPrefix(url, key) {
