@@ -9,8 +9,8 @@ import (
 )
 
 func Init() {
-	TargetRegistered = make(map[string]*TargetServer)
-	StaticRegistered = make(map[string]*StaticServer)
+	// TargetRegistered = make(map[string]*TargetServer)
+	// StaticRegistered = make(map[string]*StaticServer)
 	ProxyServerRegistered = make(map[string]ProxyServer)
 
 	//这里应该用config读取配置文件
@@ -34,7 +34,8 @@ func Init() {
 					LocalRoot:       location.Root,
 					DefaultFilePath: location.Index,
 				})
-				p.Locations = append(p.Locations, ss)
+				//p.Locations = append(p.Locations, ss)
+				p.Locations[ss.RemotePath] = ss
 			} else {
 				ts := NewTargetServer(TargetServer{
 					ProxyPass:      location.ProxyPass,
@@ -51,7 +52,8 @@ func Init() {
 					}
 					ts.ProxySetHeader[y[0]] = append(ts.ProxySetHeader[y[0]], y[1])
 				}
-				p.Locations = append(p.Locations, ts)
+				//p.Locations = append(p.Locations, ts)
+				p.Locations[ts.LocationRouter] = ts
 			}
 		}
 
@@ -86,19 +88,19 @@ func Init() {
 
 //由于更改了全局对象存放方式,FindServer函数要大改
 //要不传入request指针, 在函数内部确定对象好了
-func FindServer2(req *myhttp.Request) (server Server, isStatic bool, err error) {
+func FindServer(req *myhttp.Request) (Server, error) {
 
 	//首先应该根据 Host 头部确定对应 server_name?
 	//应该叫server_name
 	hosts, ok := req.Headers["Host"]
 	if !ok {
-		return NewTargetServer(""), false, errors.New("No Host Header")
+		return NewTargetServer(""), errors.New("no Host Header")
 	}
 	host := hosts[0] //简化
 
 	ps, ok := ProxyServerRegistered[host]
 	if !ok {
-		return NewTargetServer(""), false, errors.New("No such proxy server")
+		return NewTargetServer(""), errors.New("no such proxy server")
 	}
 
 	//
@@ -107,36 +109,38 @@ func FindServer2(req *myhttp.Request) (server Server, isStatic bool, err error) 
 
 	//然后根据 router 确定对应的location  (之后考虑通配符)
 	//回头写个函数
-	for _, server := range ps.Locations { //woc完蛋，匹配不了， proxyServer要改
-		//if req.UrlParsed.Router ==
+	for r, s := range ps.Locations { //woc完蛋，匹配不了， proxyServer要改
+		if req.UrlParsed.Router == r { //暂时用等于匹配
+			//得到Server实例,返回
+			server := s
+			return server, nil
+		}
 	}
 
-	//得到Server实例,返回
-
-	return NewTargetServer(""), false, nil
+	return NewTargetServer(""), errors.New("no matching location")
 }
 
 //原来的没用了，先放这
-func FindServer(url string) (server Server, isStatic bool) {
-	for key, val := range StaticRegistered {
-		if strings.HasPrefix(url, key) {
-			isStatic = true
-			temp := val //还是写一下好
-			server = temp
-			break
-		}
-	}
+// func FindServer(url string) (server Server, isStatic bool) {
+// 	for key, val := range StaticRegistered {
+// 		if strings.HasPrefix(url, key) {
+// 			isStatic = true
+// 			temp := val //还是写一下好
+// 			server = temp
+// 			break
+// 		}
+// 	}
 
-	if isStatic {
-		return
-	}
+// 	if isStatic {
+// 		return
+// 	}
 
-	for key, val := range TargetRegistered {
-		if strings.HasPrefix(url, key) {
-			temp := val
-			server = temp
-			break
-		}
-	}
-	return
-}
+// 	for key, val := range TargetRegistered {
+// 		if strings.HasPrefix(url, key) {
+// 			temp := val
+// 			server = temp
+// 			break
+// 		}
+// 	}
+// 	return
+// }

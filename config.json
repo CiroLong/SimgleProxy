@@ -1,8 +1,8 @@
 {
     "servers": [
         {
-            "listen": 80,
-            "server_name": "localhost1",
+            "listen": 8080,
+            "server_name": "127.0.0.1",
             "locations": [
                 {
                     "router": "/api/v1",
@@ -21,7 +21,7 @@
             "access_log": "/mnt/log/nginx/localhost1/access.log"
         },
         {
-            "listen": 80,
+            "listen": 8080,
             "server_name": "localhost2",
             "locations": [
                 {
