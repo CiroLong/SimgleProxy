@@ -3,6 +3,7 @@ package proxy
 import (
 	"SIMGLEPROXY/myhttp"
 	"bytes"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -15,6 +16,8 @@ func NewTargetServer(info interface{}) *TargetServer {
 }
 
 func (s *TargetServer) Serve(conn net.Conn, request *myhttp.Request) error {
+	//fmt.Printf("%#v\n", *s)
+
 	//编辑请求
 	newRequest := request.Copy()
 	newRequest.ChangeHost(s.ProxyPass)
@@ -79,6 +82,13 @@ func (s *TargetServer) Serve(conn net.Conn, request *myhttp.Request) error {
 	fmt.Println("done")
 
 	<-ok
-	conn.Write(dataBuf)
+	//fmt.Println(string(dataBuf)) //为什么这个打印了下面的Write写入不成功，而且err还是nil, 好吧是我的postman好像出问题了
+	n, err := conn.Write(dataBuf)
+	if err != nil {
+		return err
+	}
+	if n == 0 {
+		return errors.New("write 0 bytes?")
+	}
 	return nil
 }

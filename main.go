@@ -44,11 +44,11 @@ func Configtest(conn net.Conn) {
 		return
 	}
 	fmt.Println("parse success")
-	// fmt.Printf("%#v\n", request.Headers)
+	//fmt.Printf("%#v\n", request)
 
-	s, _ := proxy.FindServer(&request)
+	s, err := proxy.FindServer(&request)
 
-	if s != nil {
+	if err == nil {
 		if err := s.Serve(conn, &request); err != nil {
 			fmt.Println("Serve err", err)
 		}

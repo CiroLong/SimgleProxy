@@ -23,6 +23,7 @@ func Init() {
 
 	for _, server := range c.Servers {
 		p := new(ProxyServer)
+		p.Locations = make(map[string]Server)
 		p.ServerName = server.ServerName
 		p.AccessLogPath = server.AccessLogPath
 		p.ErrorLogPath = server.ErrorLogPath
@@ -32,13 +33,13 @@ func Init() {
 				ss := NewStaticServer(StaticServer{
 					RemotePath:      location.Router,
 					LocalRoot:       location.Root,
-					DefaultFilePath: location.Index,
+					DefaultFilePath: location.Root + "/" + location.Index,
 				})
 				//p.Locations = append(p.Locations, ss)
 				p.Locations[ss.RemotePath] = ss
 			} else {
 				ts := NewTargetServer(TargetServer{
-					ProxyPass:      location.ProxyPass,
+					ProxyPass:      strings.ReplaceAll(location.ProxyPass, "http://", ""),
 					LocationRouter: location.Router,
 				})
 				//难过
@@ -94,13 +95,13 @@ func FindServer(req *myhttp.Request) (Server, error) {
 	//应该叫server_name
 	hosts, ok := req.Headers["Host"]
 	if !ok {
-		return NewTargetServer(""), errors.New("no Host Header")
+		return NewTargetServer(TargetServer{}), errors.New("no Host Header")
 	}
 	host := hosts[0] //简化
 
 	ps, ok := ProxyServerRegistered[host]
 	if !ok {
-		return NewTargetServer(""), errors.New("no such proxy server")
+		return NewTargetServer(TargetServer{}), errors.New("no such proxy server")
 	}
 
 	//
@@ -110,14 +111,14 @@ func FindServer(req *myhttp.Request) (Server, error) {
 	//然后根据 router 确定对应的location  (之后考虑通配符)
 	//回头写个函数
 	for r, s := range ps.Locations { //woc完蛋，匹配不了， proxyServer要改
-		if req.UrlParsed.Router == r { //暂时用等于匹配
+		if req.UrlParsed.Router == r { //暂时用等于匹配,还需要考虑静态文件匹配,通配符匹配的问题
 			//得到Server实例,返回
 			server := s
 			return server, nil
 		}
 	}
 
-	return NewTargetServer(""), errors.New("no matching location")
+	return NewTargetServer(TargetServer{}), errors.New("no matching location")
 }
 
 //原来的没用了，先放这

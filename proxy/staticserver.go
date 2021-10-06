@@ -23,6 +23,7 @@ func (s *StaticServer) GetFile(path string) (*os.File, error) {
 	} else {
 		fullPath = s.LocalRoot + path
 	}
+	fmt.Println("fullpath:", fullPath)
 	fp, err := os.Open(fullPath)
 	return fp, err
 }
