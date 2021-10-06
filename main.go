@@ -53,7 +53,7 @@ func Configtest(conn net.Conn) {
 			fmt.Println("Serve err", err)
 		}
 	} else {
-		fmt.Println("s is nil !")
+		fmt.Println("find server error:", err)
 	}
 }
 

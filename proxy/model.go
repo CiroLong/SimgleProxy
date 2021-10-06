@@ -31,7 +31,7 @@ type StaticServer struct {
 type ProxyServer struct {
 	ListenPort    string
 	ServerName    string
-	Locations     map[string]Server //利用RemotePath或者LocationRouter做为键
+	Locations     map[string]Server // [=|^~|~|~*|@] path    (利用RemotePath或者LocationRouter做为键(x))
 	ErrorLogPath  string
 	AccessLogPath string
 }

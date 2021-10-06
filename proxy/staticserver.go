@@ -30,7 +30,10 @@ func (s *StaticServer) GetFile(path string) (*os.File, error) {
 
 func (s *StaticServer) Serve(conn net.Conn, request *myhttp.Request) error {
 
-	path := request.UrlParsed.Router[:]
+	path := request.UrlParsed.Router
+	if !strings.HasPrefix(s.RemotePath, "/") { //紧急处理^~
+		s.RemotePath = s.RemotePath[strings.Index(s.RemotePath, "/"):]
+	}
 	path = strings.Replace(path, s.RemotePath, "", 1)
 
 	fp, err := s.GetFile(path)

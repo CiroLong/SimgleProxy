@@ -5,13 +5,25 @@
             "server_name": "127.0.0.1:8080",
             "locations": [
                 {
-                    "router": "/api/v1",
+                    "router": "= /api/v2",
                     "proxy_set_header": "Host=$host",
                     "proxy_pass": "http://127.0.0.1:8081",
                     "isstatic": false
                 },
                 {
-                    "router": "/static",
+                    "router": "^~ /api/v2",
+                    "proxy_set_header": "Host=$host",
+                    "proxy_pass": "http://127.0.0.1:8082",
+                    "isstatic": false
+                },
+                {
+                    "router": "^~ /api/v1",
+                    "proxy_set_header": "Host=$host",
+                    "proxy_pass": "http://127.0.0.1:8081",
+                    "isstatic": false
+                },
+                {
+                    "router": "^~ /static",
                     "root": "/home/ciro/mydocument/localhost",
                     "index": "index.html",
                     "isstatic": true

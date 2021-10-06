@@ -4,6 +4,7 @@ import (
 	"SIMGLEPROXY/myhttp"
 	"errors"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -60,31 +61,6 @@ func Init() {
 
 		ProxyServerRegistered[p.ServerName] = *p
 	}
-
-	// fmt.Printf("%#v\n\n", ProxyServerRegistered)
-
-	//test
-	// for _, s := range ProxyServerRegistered {
-	// 	for _, server := range s.Locations {
-	// 		fmt.Printf("%#v\n", server)
-	// 	}
-	// }
-
-	//test ok, right
-
-	// TargetRegistered["/api/v1"] = NewTargetServer(TargetServer{
-	// 	ProxySetHeader: (map[string][]string{
-	// 		"Host": {"test.com"},
-	// 	}),
-	// 	ProxyPass:      "127.0.0.1:8081",
-	// 	LocationRouter: "/api/v1",
-	// })
-
-	// StaticRegistered["/static"] = NewStaticServer(StaticServer{
-	// 	RemotePath:      "/static",
-	// 	LocalRoot:       "/home/ciro/mydocument/localhost",
-	// 	DefaultFilePath: "/home/ciro/mydocument/localhost/index.html",
-	// })
 }
 
 //由于更改了全局对象存放方式,FindServer函数要大改
@@ -104,44 +80,101 @@ func FindServer(req *myhttp.Request) (Server, error) {
 		return NewTargetServer(TargetServer{}), errors.New("no such proxy server")
 	}
 
-	//
-	// 这里可能要对日志做处理
-	//
-
 	//然后根据 router 确定对应的location  (之后考虑通配符)
 	//回头写个函数
-	for r, s := range ps.Locations { //woc完蛋，匹配不了， proxyServer要改
-		if req.UrlParsed.Router == r { //暂时用等于匹配,还需要考虑静态文件匹配,通配符匹配的问题
-			//得到Server实例,返回
-			server := s
-			return server, nil
+	// for r, s := range ps.Locations { //woc完蛋，匹配不了， proxyServer要改
+
+	// 	if req.UrlParsed.Router == r { //暂时用等于匹配,还需要考虑静态文件匹配,通配符匹配的问题
+	// 		//得到Server实例,返回
+	// 		server := s
+	// 		return server, nil
+	// 	}
+	// }
+	server, err := ps.LocationRouterMatch(req.UrlParsed)
+	if err != nil {
+		return server, err
+	}
+
+	return server, nil
+}
+
+func (ps *ProxyServer) LocationRouterMatch(url myhttp.Url) (Server, error) {
+	//[=|^~|~|~*|@] path
+	//var server Server
+	var hasNormal bool
+
+	for fpath, s := range ps.Locations {
+		pathSlice := strings.Split(fpath, " ")
+		if len(pathSlice) == 2 {
+			if pathSlice[0] == "=" { // 精确匹配 =
+				if url.Router == pathSlice[1] {
+					server := s
+					return server, nil
+				}
+			}
 		}
 	}
 
-	return NewTargetServer(TargetServer{}), errors.New("no matching location")
+	var max int
+	var pathPrefix string
+	for fpath := range ps.Locations {
+		pathSlice := strings.Split(fpath, " ")
+		if len(pathSlice) == 2 {
+			if pathSlice[0] == "^~" { // 前缀匹配 (非正则匹配 ^~ 返回匹配项多的？
+				if strings.HasPrefix(url.Router, pathSlice[1]) {
+					numRouter := strings.Split(pathSlice[1], "/")
+					if len(numRouter) > max {
+						max = len(numRouter)
+						pathPrefix = fpath
+					}
+				}
+			}
+		}
+	}
+	if max > 0 {
+		return ps.Locations[pathPrefix], nil
+	}
+
+	for fpath, s := range ps.Locations {
+		pathSlice := strings.Split(fpath, " ")
+		if len(pathSlice) == 2 {
+			if pathSlice[0] == "~" { // 正则匹配 ~ 和 ~*
+				//区分大小写
+				match, _ := regexp.MatchString(pathSlice[1], url.Router)
+				if match {
+					server := s
+					return server, nil
+				}
+			} else if pathSlice[0] == "~*" {
+				//不区分大小写
+				r := strings.ToLower(url.Router)
+				p := strings.ToLower(pathSlice[1])
+				match, _ := regexp.MatchString(p, r)
+				if match {
+					server := s
+					return server, nil
+				}
+			}
+		}
+	}
+
+	for fpath, s := range ps.Locations {
+		pathSlice := strings.Split(fpath, " ")
+		if len(pathSlice) == 1 { // 普通前缀匹配
+			if pathSlice[0] == "/" {
+				hasNormal = true
+				continue
+			}
+			if strings.HasPrefix(url.Router, pathSlice[0]) {
+				server := s
+				return server, nil
+			}
+		}
+	}
+
+	if hasNormal {
+		return ps.Locations["/"], nil
+	} else {
+		return nil, errors.New("no matched server")
+	}
 }
-
-//原来的没用了，先放这
-// func FindServer(url string) (server Server, isStatic bool) {
-// 	for key, val := range StaticRegistered {
-// 		if strings.HasPrefix(url, key) {
-// 			isStatic = true
-// 			temp := val //还是写一下好
-// 			server = temp
-// 			break
-// 		}
-// 	}
-
-// 	if isStatic {
-// 		return
-// 	}
-
-// 	for key, val := range TargetRegistered {
-// 		if strings.HasPrefix(url, key) {
-// 			temp := val
-// 			server = temp
-// 			break
-// 		}
-// 	}
-// 	return
-// }
