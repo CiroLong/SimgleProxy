@@ -44,13 +44,13 @@
                 },
                 {
                     "router": "/static",
-                    "root": "/mnt/var/www/localhost2",
+                    "root": "/home/ciro/mydocument/localhost2",
                     "index": "index.html",
                     "isstatic": true
                 }
             ],
-            "error_log": "/mnt/log/nginx/localhost2/error.log",
-            "access_log": "/mnt/log/nginx/localhost2/access.log"
+            "error_log": "/home/ciro/mydocument/localhost2/error.log",
+            "access_log": "/home/ciro/mydocument/localhost2/access.log"
         }
     ]
 }

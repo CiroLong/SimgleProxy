@@ -1,12 +1,13 @@
 package proxy
 
 import (
+	"SIMGLEPROXY/logger"
 	"SIMGLEPROXY/myhttp"
 	"net"
 )
 
 type Server interface {
-	Serve(net.Conn, *myhttp.Request) error
+	Serve(net.Conn, *myhttp.Request, *ProxyServer) error
 }
 
 type TargetServer struct {
@@ -34,6 +35,8 @@ type ProxyServer struct {
 	Locations     map[string]Server // [=|^~|~|~*|@] path    (利用RemotePath或者LocationRouter做为键(x))
 	ErrorLogPath  string
 	AccessLogPath string
+	ErrorLogger   logger.Logger
+	AccessLogger  logger.Logger
 }
 
-var ProxyServerRegistered map[string]ProxyServer //用server_name标识？
+var ProxyServerRegistered map[string]*ProxyServer //用server_name标识？

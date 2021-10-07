@@ -4,6 +4,7 @@ import (
 	"SIMGLEPROXY/myhttp"
 	"errors"
 	"fmt"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -12,7 +13,7 @@ import (
 func Init() {
 	// TargetRegistered = make(map[string]*TargetServer)
 	// StaticRegistered = make(map[string]*StaticServer)
-	ProxyServerRegistered = make(map[string]ProxyServer)
+	ProxyServerRegistered = make(map[string]*ProxyServer)
 
 	//这里应该用config读取配置文件
 	c, err := LoadConfig()
@@ -58,26 +59,43 @@ func Init() {
 				p.Locations[ts.LocationRouter] = ts
 			}
 		}
+		p.AccessLogger.Fp, err = os.OpenFile(p.AccessLogPath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
+		if err != nil {
+			fmt.Println("open AccessLogger fail:", err)
+			os.Exit(1)
+		}
+		p.ErrorLogger.Fp, err = os.OpenFile(p.ErrorLogPath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
+		if err != nil {
+			fmt.Println("open ErrorLogger fail:", err)
+			os.Exit(1)
+		}
 
-		ProxyServerRegistered[p.ServerName] = *p
+		ProxyServerRegistered[p.ServerName] = p
+	}
+}
+
+func Realse() {
+	for _, ps := range ProxyServerRegistered {
+		ps.AccessLogger.Fp.Close()
+		ps.ErrorLogger.Fp.Close()
 	}
 }
 
 //由于更改了全局对象存放方式,FindServer函数要大改
 //要不传入request指针, 在函数内部确定对象好了
-func FindServer(req *myhttp.Request) (Server, error) {
+func FindServer(req *myhttp.Request) (Server, ProxyServer, error) {
 
 	//首先应该根据 Host 头部确定对应 server_name?
 	//应该叫server_name
 	hosts, ok := req.Headers["Host"]
 	if !ok {
-		return NewTargetServer(TargetServer{}), errors.New("no Host Header")
+		return NewTargetServer(TargetServer{}), ProxyServer{}, errors.New("no Host Header")
 	}
 	host := hosts[0] //简化
 
 	ps, ok := ProxyServerRegistered[host]
 	if !ok {
-		return NewTargetServer(TargetServer{}), errors.New("no such proxy server")
+		return NewTargetServer(TargetServer{}), *ps, errors.New("no such proxy server")
 	}
 
 	//然后根据 router 确定对应的location  (之后考虑通配符)
@@ -90,17 +108,19 @@ func FindServer(req *myhttp.Request) (Server, error) {
 	// 		return server, nil
 	// 	}
 	// }
-	server, err := ps.LocationRouterMatch(req.UrlParsed)
+	server, err := ps.LocationRouterMatch(req)
 	if err != nil {
-		return server, err
+		return server, *ps, err
 	}
 
-	return server, nil
+	return server, *ps, nil
 }
 
-func (ps *ProxyServer) LocationRouterMatch(url myhttp.Url) (Server, error) {
+func (ps *ProxyServer) LocationRouterMatch(req *myhttp.Request) (Server, error) {
 	//[=|^~|~|~*|@] path
 	//var server Server
+
+	url := req.UrlParsed
 	var hasNormal bool
 
 	for fpath, s := range ps.Locations {
@@ -175,6 +195,9 @@ func (ps *ProxyServer) LocationRouterMatch(url myhttp.Url) (Server, error) {
 	if hasNormal {
 		return ps.Locations["/"], nil
 	} else {
-		return nil, errors.New("no matched server")
+		host := req.Headers["Host"]
+		out := host[0] + req.Url + " (no matched location)"
+
+		return nil, errors.New(out)
 	}
 }

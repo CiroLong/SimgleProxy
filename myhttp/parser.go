@@ -99,3 +99,67 @@ func ParseUrl(url string) (Url, error) {
 
 	return *U, nil
 }
+
+func ParseHttpResponse(r io.Reader) (Response, error) {
+	reader := bufio.NewReader(r)
+	response := NewResponse()
+	var inhead bool = true
+	var iter int = 1 //计数器
+	for {            //头部
+		data, _, err := reader.ReadLine()
+		if err != nil {
+			if err != io.EOF {
+				log.Println(err)
+			} else {
+				return response, err
+			}
+		}
+		data_s := string(data)
+		if iter == 1 {
+			RLine := strings.Split(data_s, " ")
+			if len(RLine) != 3 {
+				return response, errors.New("not http")
+			}
+
+			response.Proto = RLine[0]
+			response.StatusCode, _ = strconv.Atoi(RLine[1])
+			response.Phrase = RLine[2]
+			iter++
+			continue
+		}
+
+		if data_s == "" {
+			inhead = false
+		}
+		if inhead {
+			HeaderLine := strings.Split(data_s, ": ")
+			if len(HeaderLine) != 2 {
+				return response, errors.New("HeaderLine error")
+			}
+			HeaderDomain := HeaderLine[0]
+			HeadValues := HeaderLine[1]
+			HeadValue := strings.Split(HeadValues, ", ")
+			response.Headers[HeaderDomain] = append(response.Headers[HeaderDomain], HeadValue...)
+
+		} else {
+			// fmt.Println("Headers ends")
+			break
+		}
+	}
+
+	Length, ok := response.Headers["Content-Length"]
+	if !ok {
+		return response, nil
+	}
+	length, _ := strconv.Atoi(Length[0])
+
+	var err error
+	body := make([]byte, length)
+	_, err = reader.Read(body)
+	if err != nil && err != io.EOF {
+		return response, err
+	}
+	response.Body = body[:]
+
+	return response, nil
+}

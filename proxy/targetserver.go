@@ -15,16 +15,10 @@ func NewTargetServer(info interface{}) *TargetServer {
 	return s
 }
 
-func (s *TargetServer) Serve(conn net.Conn, request *myhttp.Request) error {
-	//fmt.Printf("%#v\n", *s)
-
+func (s *TargetServer) Serve(conn net.Conn, request *myhttp.Request, ps *ProxyServer) error {
 	//编辑请求
 	newRequest := request.Copy()
 	newRequest.ChangeHost(s.ProxyPass)
-	//？
-
-	fmt.Println("copy success")
-	// fmt.Printf("%#v\n", newRequest.Headers)
 
 	proxy, err := net.Dial("tcp", s.ProxyPass)
 	if err != nil {
@@ -34,22 +28,12 @@ func (s *TargetServer) Serve(conn net.Conn, request *myhttp.Request) error {
 	}
 	defer proxy.Close()
 
-	fmt.Println("dial success")
-
 	dataBuf := make([]byte, 1024*8)
 	ok := make(chan struct{})
 	go func() {
 		proxy.Read(dataBuf)
 		ok <- struct{}{}
 	}()
-	// go func() {
-	// 	//应该在另一个goroutine中读取
-
-	// 	_, err := io.Copy(conn, proxy) //这个函数一直阻塞？
-	// 	if err != nil {
-	// 		fmt.Println("io copy err", err)
-	// 	}
-	// }()
 
 	bufffff := new(bytes.Buffer)
 
@@ -61,28 +45,9 @@ func (s *TargetServer) Serve(conn net.Conn, request *myhttp.Request) error {
 	box, _ := ioutil.ReadAll(bufffff)
 	proxy.Write(box)
 
-	// fmt.Println("send success")
-
-	//这一段要重构
-	// responseReader := bufio.NewReader(proxy)
-
-	// _, err = proxy.Read(responseData)
-	// if err != nil && err != io.EOF {
-	// 	fmt.Println("get response error", err)
-	// 	fmt.Println(string(responseData))
-	// 	return
-	// }
-
-	// _, err = conn.Write(responseData)
-	// if err != nil {
-	// 	fmt.Println("wirte back error", err)
-	// 	return
-	// }
-
-	fmt.Println("done")
-
 	<-ok
 	//fmt.Println(string(dataBuf)) //为什么这个打印了下面的Write写入不成功，而且err还是nil, 好吧是我的postman好像出问题了
+
 	n, err := conn.Write(dataBuf)
 	if err != nil {
 		return err
@@ -90,5 +55,12 @@ func (s *TargetServer) Serve(conn net.Conn, request *myhttp.Request) error {
 	if n == 0 {
 		return errors.New("write 0 bytes?")
 	}
+
+	//没写response读取==
+	dataBufff := new(bytes.Buffer)
+	dataBufff.Write(dataBuf)
+	response, _ := myhttp.ParseHttpResponse(dataBufff)
+
+	ps.AccessLogger.PrintAccess(request, &response)
 	return nil
 }

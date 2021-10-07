@@ -14,6 +14,8 @@ func init() {
 
 func main() {
 	start()
+
+	proxy.Realse()
 }
 
 func start() {
@@ -30,11 +32,11 @@ func start() {
 			fmt.Println("accept error:", err)
 			break
 		}
-		go Configtest(conn)
+		go Loggertest(conn)
 	}
 }
 
-func Configtest(conn net.Conn) {
+func Loggertest(conn net.Conn) {
 	defer conn.Close()
 
 	reader := bufio.NewReader(conn)
@@ -43,17 +45,26 @@ func Configtest(conn net.Conn) {
 		fmt.Println("Parse error:", err)
 		return
 	}
-	fmt.Println("parse success")
+	// fmt.Println("parse success")
 	//fmt.Printf("%#v\n", request)
 
-	s, err := proxy.FindServer(&request)
+	s, ps, err := proxy.FindServer(&request)
+
+	// _, werr := ps.AccessLogger.Fp.WriteString("test string")
+	// if werr != nil {
+	// 	fmt.Println("write err", werr)
+	// } else {
+	// 	fmt.Println("write success", werr)
+	// }
 
 	if err == nil {
-		if err := s.Serve(conn, &request); err != nil {
+		if err := s.Serve(conn, &request, &ps); err != nil {
 			fmt.Println("Serve err", err)
+			ps.ErrorLogger.PrintError(err)
 		}
 	} else {
 		fmt.Println("find server error:", err)
+		ps.ErrorLogger.PrintError(err)
 	}
 }
 

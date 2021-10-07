@@ -28,7 +28,7 @@ func (s *StaticServer) GetFile(path string) (*os.File, error) {
 	return fp, err
 }
 
-func (s *StaticServer) Serve(conn net.Conn, request *myhttp.Request) error {
+func (s *StaticServer) Serve(conn net.Conn, request *myhttp.Request, ps *ProxyServer) error {
 
 	path := request.UrlParsed.Router
 	if !strings.HasPrefix(s.RemotePath, "/") { //紧急处理^~
@@ -57,6 +57,7 @@ func (s *StaticServer) Serve(conn net.Conn, request *myhttp.Request) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("done")
+
+	ps.AccessLogger.PrintAccess(request, &resp) //logger
 	return nil
 }
