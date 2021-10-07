@@ -15,6 +15,8 @@ func Init() {
 	// StaticRegistered = make(map[string]*StaticServer)
 	ProxyServerRegistered = make(map[string]*ProxyServer)
 
+	UpStreamsRegistered = make(map[string]*UpStream)
+
 	//这里应该用config读取配置文件
 	c, err := LoadConfig()
 	if err != nil {
@@ -72,9 +74,17 @@ func Init() {
 
 		ProxyServerRegistered[p.ServerName] = p
 	}
+
+	for _, upsrteamConfig := range c.UpStreams {
+		u := new(UpStream)
+		u.ServerName = make([]string, 0)
+		u.ProxyPass = upsrteamConfig.ProxyPass
+		u.ServerName = append(u.ServerName, upsrteamConfig.ServerName...)
+		UpStreamsRegistered[u.ProxyPass] = u
+	}
 }
 
-func Realse() {
+func Release() {
 	for _, ps := range ProxyServerRegistered {
 		ps.AccessLogger.Fp.Close()
 		ps.ErrorLogger.Fp.Close()

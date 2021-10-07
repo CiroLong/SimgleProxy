@@ -20,7 +20,9 @@ func (s *TargetServer) Serve(conn net.Conn, request *myhttp.Request, ps *ProxySe
 	newRequest := request.Copy()
 	newRequest.ChangeHost(s.ProxyPass)
 
-	proxy, err := net.Dial("tcp", s.ProxyPass)
+	realProxyPass := LoadProxyPass(s.ProxyPass)
+
+	proxy, err := net.Dial("tcp", realProxyPass)
 	if err != nil {
 		fmt.Println("proxy connect error:", err)
 		//返回 错误代码

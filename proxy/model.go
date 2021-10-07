@@ -40,3 +40,13 @@ type ProxyServer struct {
 }
 
 var ProxyServerRegistered map[string]*ProxyServer //用server_name标识？
+
+//以下为负载均衡搭建的model
+
+type UpStream struct {
+	ProxyPass  string
+	ServerName []string
+	now        int
+}
+
+var UpStreamsRegistered map[string]*UpStream // 暂时就写个轮循吧

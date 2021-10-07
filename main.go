@@ -15,7 +15,7 @@ func init() {
 func main() {
 	start()
 
-	proxy.Realse()
+	proxy.Release()
 }
 
 func start() {

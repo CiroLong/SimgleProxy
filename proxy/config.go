@@ -30,8 +30,14 @@ type Server_config struct {
 	AccessLogPath string     `json:"access_log"`
 }
 
+type UpStreamCofig struct {
+	ProxyPass  string   `json:"proxy_pass"`
+	ServerName []string `json:"server"`
+}
+
 type Config struct {
-	Servers []Server_config `json:"servers"`
+	UpStreams []UpStreamCofig `json:"upstreams"`
+	Servers   []Server_config `json:"servers"`
 }
 
 func LoadConfig() (Config, error) {

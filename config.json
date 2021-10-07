@@ -1,9 +1,37 @@
 {
+    "upstreams": [
+        {
+            "proxy_pass": "testserver",
+            "server": [
+                "http://127.0.0.1:8081",
+                "http://127.0.0.1:8082",
+                "http://127.0.0.1:8083"
+            ]
+        }
+    ],
     "servers": [
         {
             "listen": 8080,
             "server_name": "127.0.0.1:8080",
             "locations": [
+                {
+                    "router": "= /api/test",
+                    "proxy_set_header": "Host=$host",
+                    "proxy_pass": "http://testserver",
+                    "isstatic": false
+                },
+                {
+                    "router": "= /api/test",
+                    "proxy_set_header": "Host=$host",
+                    "proxy_pass": "http://testserver",
+                    "isstatic": false
+                },
+                {
+                    "router": "= /api/test",
+                    "proxy_set_header": "Host=$host",
+                    "proxy_pass": "http://testserver",
+                    "isstatic": false
+                },
                 {
                     "router": "= /api/v2",
                     "proxy_set_header": "Host=$host",
