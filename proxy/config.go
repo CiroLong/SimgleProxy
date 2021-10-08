@@ -33,6 +33,8 @@ type Server_config struct {
 type UpStreamCofig struct {
 	ProxyPass  string   `json:"proxy_pass"`
 	ServerName []string `json:"server"`
+	Mode       string   `json:"mode"`   // WRR 加权轮询，PR 轮询
+	Weight     []int    `json:"weight"` //权重
 }
 
 type Config struct {

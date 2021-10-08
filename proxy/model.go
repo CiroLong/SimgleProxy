@@ -46,7 +46,9 @@ var ProxyServerRegistered map[string]*ProxyServer //用server_name标识？
 type UpStream struct {
 	ProxyPass  string
 	ServerName []string
-	now        int
+	now        int //隐藏吧
+	Weight     []int
+	Mode       string
 }
 
 var UpStreamsRegistered map[string]*UpStream // 暂时就写个轮循吧

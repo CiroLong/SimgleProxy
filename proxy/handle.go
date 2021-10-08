@@ -77,9 +77,14 @@ func Init() {
 
 	for _, upsrteamConfig := range c.UpStreams {
 		u := new(UpStream)
+		u.Weight = make([]int, 0)
 		u.ServerName = make([]string, 0)
+
 		u.ProxyPass = upsrteamConfig.ProxyPass
 		u.ServerName = append(u.ServerName, upsrteamConfig.ServerName...)
+
+		u.Weight = append(u.Weight, upsrteamConfig.Weight...)
+		u.Mode = upsrteamConfig.Mode
 		UpStreamsRegistered[u.ProxyPass] = u
 	}
 }
