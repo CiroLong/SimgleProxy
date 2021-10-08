@@ -106,9 +106,10 @@ func FindServer(req *myhttp.Request) (Server, ProxyServer, error) {
 	if !ok {
 		return NewTargetServer(TargetServer{}), ProxyServer{}, errors.New("no Host Header")
 	}
-	host := hosts[0] //简化
+	host := hosts[0]                         //简化
+	nhost := host[:strings.Index(host, ":")] // 去除端口号
 
-	ps, ok := ProxyServerRegistered[host]
+	ps, ok := ProxyServerRegistered[nhost]
 	if !ok {
 		return NewTargetServer(TargetServer{}), *ps, errors.New("no such proxy server")
 	}
