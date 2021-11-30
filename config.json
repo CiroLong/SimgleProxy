@@ -21,15 +21,9 @@
             "server_name": "127.0.0.1",
             "locations": [
                 {
-                    "router": "= /api/test",
+                    "router": "/",
                     "proxy_set_header": "Host=test.com",
-                    "proxy_pass": "http://testserver",
-                    "isstatic": false
-                },
-                {
-                    "router": "= /api/test",
-                    "proxy_set_header": "Host=test.com",
-                    "proxy_pass": "http://testserver",
+                    "proxy_pass": "http://www.hust.edu.cn:80/",
                     "isstatic": false
                 },
                 {
@@ -58,13 +52,13 @@
                 },
                 {
                     "router": "^~ /static",
-                    "root": "/home/ciro/mydocument/localhost",
+                    "root": "F:\\testforbinyan\\localhost",
                     "index": "index.html",
                     "isstatic": true
                 }
             ],
-            "error_log": "/home/ciro/mydocument/localhost/error.log",
-            "access_log": "/home/ciro/mydocument/localhost/access.log"
+            "error_log": "F:\\testforbinyan\\localhost\\error.log",
+            "access_log": "F:\\testforbinyan\\localhost\\access.log"
         },
         {
             "listen": 8079,
@@ -78,13 +72,13 @@
                 },
                 {
                     "router": "/static",
-                    "root": "/home/ciro/mydocument/localhost2",
+                    "root": "F:\\testforbinyan\\localhost1",
                     "index": "index.html",
                     "isstatic": true
                 }
             ],
-            "error_log": "/home/ciro/mydocument/localhost2/error.log",
-            "access_log": "/home/ciro/mydocument/localhost2/access.log"
+            "error_log": "F:\\testforbinyan\\localhost1\\error.log",
+            "access_log": "F:\\testforbinyan\\localhost1\\access.log"
         }
     ]
 }
